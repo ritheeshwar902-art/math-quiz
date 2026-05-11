@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Math Quiz</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .question { margin-bottom: 15px; }
+        button { padding: 10px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<h2>Math Quiz</h2>
+
+<div id="ageSection">
+    Enter Age: <input type="number" id="age">
+    <button onclick="startQuiz()">Start</button>
+</div>
+
+<form id="quizForm"></form>
+
+<div id="result"></div>
+
+<script>
+let questions = [];
+
+function getRange(age) {
+    if (age <= 7) return 10;
+    if (age <= 10) return 20;
+    if (age <= 13) return 50;
+    return 100;
+}
+
+function randomOp() {
+    let ops = ['+', '-', '*', '/'];
+    return ops[Math.floor(Math.random() * ops.length)];
+}
+
+// ✅ UPDATED FUNCTION (no negative answers)
+function generateQuestion(range) {
+    let a, b, op, answer;
+
+    while (true) {
+        a = Math.floor(Math.random() * range) + 1;
+        b = Math.floor(Math.random() * range) + 1;
+        op = randomOp();
+
+        if (op === '+') {
+            answer = a + b;
+            break;
+        }
+
+        if (op === '-') {
+            if (a >= b) {
+                answer = a - b;
+                break;
+            }
+        }
+
+        if (op === '*') {
+            answer = a * b;
+            break;
+        }
+
+        if (op === '/') {
+            a = a * b; // ensures clean division
+            answer = a / b;
+            break;
+        }
+    }
+
+    return { q: `${a} ${op} ${b}`, ans: answer };
+}
+
+function startQuiz() {
+    let age = document.getElementById("age").value;
+    let range = getRange(age);
+
+    document.getElementById("ageSection").style.display = "none";
+
+    let form = document.getElementById("quizForm");
+    questions = []; // reset
+
+    for (let i = 0; i < 20; i++) {
+        let q = generateQuestion(range);
+        questions.push(q);
+
+        let div = document.createElement("div");
+        div.className = "question";
+
+        let options = [q.ans];
+
+        while (options.length < 4) {
+            let fake = q.ans + Math.floor(Math.random() * 10) - 5;
+            if (fake >= 0 && !options.includes(fake)) {
+                options.push(fake);
+            }
+        }
+
+        options.sort(() => Math.random() - 0.5);
+
+        div.innerHTML = `<b>Q${i+1}: ${q.q}</b><br>` +
+            options.map(opt => 
+                `<input type="radio" name="q${i}" value="${opt}"> ${opt}<br>`
+            ).join("");
+
+        form.appendChild(div);
+    }
+
+    let submitBtn = document.createElement("button");
+    submitBtn.type = "button";
+    submitBtn.innerText = "Submit";
+    submitBtn.onclick = checkAnswers;
+
+    form.appendChild(submitBtn);
+}
+
+function checkAnswers() {
+    let correct = 0;
+    let wrong = 0;
+    let review = "";
+
+    for (let i = 0; i < questions.length; i++) {
+        let selected = document.querySelector(`input[name="q${i}"]:checked`);
+
+        if (selected && Number(selected.value) === questions[i].ans) {
+            correct++;
+        } else {
+            wrong++;
+            review += `Q${i+1}: ${questions[i].q} = ${questions[i].ans}<br>`;
+        }
+    }
+
+    document.getElementById("result").innerHTML =
+        `<h3>Result</h3>
+         Correct: ${correct} <br>
+         Incorrect: ${wrong} <br><br>
+         <b>Correct Answers:</b><br>${review}`;
+}
+</script>
+
+</body>
+</html>
